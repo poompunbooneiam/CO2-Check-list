@@ -263,12 +263,15 @@ var SECS=[
 var S={},photos={},remarks={},svOK=false;
 ITEMS.forEach(function(it){S[it.id]=false;photos[it.id]=[];remarks[it.id]='';});
 
-var SURL=localStorage.getItem('co2_surl')||'';
+var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwO9NkglhHb6AH1NtqUwuoohUTZHVdyXu5JV2ln6kmjkRdwN60iIutK3E-__Pz3RzORRA/exec';
+var SURL=localStorage.getItem('co2_surl')||DEFAULT_URL;
 function initUI(){
   if(SURL){
     document.getElementById('setup-done').style.display='block';
   } else {
-    document.getElementById('setup-banner').style.display='block';
+    SURL = DEFAULT_URL;
+    localStorage.setItem('co2_surl', DEFAULT_URL);
+    document.getElementById('setup-done').style.display='block';
   }
 }
 function saveURL(){
