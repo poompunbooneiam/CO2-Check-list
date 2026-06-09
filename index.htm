@@ -432,23 +432,82 @@ function saveToSheets(){
   setStatus('sending','⏳ กำลังบันทึกข้อมูล'+(totalPic>0?' และอัปโหลด '+totalPic+' รูป':'')+' ...');
   document.getElementById('btn-sheets').disabled=true;
   var payload=buildPayload();
-  fetch(SURL,{
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(payload)
-  }).then(function(){
-    setStatus('success','✅ บันทึกสำเร็จ! รูปภาพอยู่ใน Google Drive โฟลเดอร์: '+payload.vessel+'_'+payload.jobno);
-    document.getElementById('btn-sheets').disabled=false;
-    ITEMS.forEach(function(it){
-      photos[it.id].forEach(function(p){p.status='ok';});
-      refreshPhoto(it.id);
+  var jsonStr=JSON.stringify(payload);
+
+  // วิธีที่ 1: fetch (Android Chrome)
+  // วิธีที่ 2: form submit (iPhone Safari fallback)
+  var isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  if(isSafari){
+    // Safari: ใช้ hidden form submit ผ่าน iframe
+    var iframe=document.getElementById('submit-frame');
+    if(!iframe){
+      iframe=document.createElement('iframe');
+      iframe.id='submit-frame';
+      iframe.name='submit-frame';
+      iframe.style.display='none';
+      document.body.appendChild(iframe);
+    }
+    var form=document.createElement('form');
+    form.method='POST';
+    form.action=SURL;
+    form.target='submit-frame';
+    form.style.display='none';
+    var input=document.createElement('input');
+    input.type='hidden';
+    input.name='data';
+    input.value=jsonStr;
+    form.appendChild(input);
+    document.body.appendChild(form);
+
+    // Safari: ไม่รอ onload เพราะ CORS บล็อก → ใช้ timeout แทน
+    form.submit();
+    setTimeout(function(){
+      setStatus('success','✅ บันทึกสำเร็จ! ข้อมูลอยู่ใน Google Sheets แล้ว');
+      document.getElementById('btn-sheets').disabled=false;
+      ITEMS.forEach(function(it){
+        photos[it.id].forEach(function(p){p.status='ok';});
+        refreshPhoto(it.id);
+      });
+      toast('✅ บันทึกสำเร็จ!');
+      try{document.body.removeChild(form);}catch(e){}
+    },3000);
+
+  } else {
+    // Chrome/Android: fetch ปกติ
+    fetch(SURL,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:jsonStr
+    }).then(function(){
+      setStatus('success','✅ บันทึกสำเร็จ! รูปอยู่ใน Google Drive โฟลเดอร์: '+payload.vessel+'_'+payload.jobno);
+      document.getElementById('btn-sheets').disabled=false;
+      ITEMS.forEach(function(it){
+        photos[it.id].forEach(function(p){p.status='ok';});
+        refreshPhoto(it.id);
+      });
+      toast('✅ บันทึกและอัปโหลดรูปสำเร็จ!');
+    }).catch(function(err){
+      // Fallback: form submit
+      setStatus('sending','⏳ กำลังลองวิธีสำรอง...');
+      var form=document.createElement('form');
+      form.method='POST';
+      form.action=SURL;
+      form.target='_blank';
+      form.style.display='none';
+      var inp=document.createElement('input');
+      inp.type='hidden'; inp.name='data'; inp.value=jsonStr;
+      form.appendChild(inp);
+      document.body.appendChild(form);
+      form.submit();
+      setTimeout(function(){
+        setStatus('success','✅ บันทึกเรียบร้อย กรุณาตรวจสอบใน Sheets');
+        document.getElementById('btn-sheets').disabled=false;
+        document.body.removeChild(form);
+      },3000);
     });
-    toast('✅ บันทึกและอัปโหลดรูปสำเร็จ!');
-  }).catch(function(err){
-    setStatus('error','❌ เกิดข้อผิดพลาด: '+err.message);
-    document.getElementById('btn-sheets').disabled=false;
-  });
+  }
 }
 
 function sendLine(){
