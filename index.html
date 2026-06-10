@@ -11,7 +11,7 @@ body{font-family:sans-serif;background:#eef2f7;color:#222;font-size:15px}
 .logo{background:#fff;color:#1a3a5c;font-weight:900;font-size:12px;padding:4px 7px;border-radius:5px;flex-shrink:0}
 .topbar h1{font-size:13px;font-weight:700;line-height:1.3;flex:1}
 .topbar p{font-size:10px;color:#aac4e0}
-.setup-banner{background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:14px;margin:10px;font-size:13px;color:#7d5a00;line-height:1.6}
+.setup-banner{display:none!important}
 .setup-banner h3{font-size:14px;font-weight:700;margin-bottom:8px}
 .setup-banner input{width:100%;padding:8px 10px;border:1px solid #ffc107;border-radius:7px;font-size:13px;margin-top:6px;background:#fff;color:#222}
 .setup-banner .bsave{margin-top:8px;padding:9px;border-radius:8px;background:#ffc107;color:#7d5a00;font-weight:700;font-size:13px;border:none;width:100%;cursor:pointer}
@@ -94,7 +94,7 @@ input[type=file]{display:none}
 <div id="setup-banner" class="setup-banner" style="display:none">
   <h3>⚙️ ตั้งค่าครั้งแรก — Google Script URL</h3>
   <p>วาง URL ของ Google Apps Script เพื่อบันทึกข้อมูลและรูปภาพลง Google Sheets / Drive</p>
-  <input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+  <input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/AKfycbwO9NkglhHb6AH1NtqUwuoohUTZHVdyXu5JV2ln6kmjkRdwN60iIutK3E-__Pz3RzORRA/exec">
   <button class="bsave" onclick="saveURL()">💾 บันทึก URL</button>
 </div>
 <div id="setup-done" class="setup-done" style="display:none">
@@ -264,16 +264,8 @@ var S={},photos={},remarks={},svOK=false;
 ITEMS.forEach(function(it){S[it.id]=false;photos[it.id]=[];remarks[it.id]='';});
 
 var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwO9NkglhHb6AH1NtqUwuoohUTZHVdyXu5JV2ln6kmjkRdwN60iIutK3E-__Pz3RzORRA/exec';
-var SURL=localStorage.getItem('co2_surl')||DEFAULT_URL;
-function initUI(){
-  if(SURL){
-    document.getElementById('setup-done').style.display='block';
-  } else {
-    SURL = DEFAULT_URL;
-    localStorage.setItem('co2_surl', DEFAULT_URL);
-    document.getElementById('setup-done').style.display='block';
-  }
-}
+var SURL=DEFAULT_URL;
+function initUI(){}
 function saveURL(){
   var u=document.getElementById('script-url-input').value.trim();
   if(!u||!u.startsWith('https://')){toast('⚠️ URL ไม่ถูกต้อง');return;}
@@ -330,15 +322,37 @@ function tog(id){
   updProg();
 }
 
+function compressImage(file, callback){
+  var maxSize = 800;
+  var quality = 0.6;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.createElement('canvas');
+      var w = img.width, h = img.height;
+      if(w > maxSize || h > maxSize){
+        if(w > h){ h = Math.round(h*maxSize/w); w = maxSize; }
+        else { w = Math.round(w*maxSize/h); h = maxSize; }
+      }
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 function addPhoto(id,input){
   Array.from(input.files).forEach(function(f){
-    if(f.size>5*1024*1024){toast('⚠️ รูปใหญ่เกิน 5MB');return;}
-    var r=new FileReader();
-    r.onload=function(e){
-      photos[id].push({b64:e.target.result,status:'pending'});
+    compressImage(f, function(compressed){
+      photos[id].push({b64:compressed,status:'pending'});
       refreshPhoto(id);
-    };
-    r.readAsDataURL(f);
+      var kb = Math.round(compressed.length*0.75/1024);
+      toast('📸 บันทึกรูป ('+kb+'KB)');
+    });
   });
   input.value='';
 }
