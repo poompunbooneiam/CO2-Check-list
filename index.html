@@ -1,4 +1,180 @@
-function doPost(e) {
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WI Checklist – Fix CO2 System</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:sans-serif;background:#eef2f7;color:#222;font-size:15px}
+.topbar{background:#1a3a5c;color:#fff;padding:11px 14px;position:sticky;top:0;z-index:99;display:flex;align-items:center;gap:8px}
+.logo{background:#fff;color:#1a3a5c;font-weight:900;font-size:12px;padding:4px 7px;border-radius:5px;flex-shrink:0}
+.topbar h1{font-size:13px;font-weight:700;line-height:1.3;flex:1}
+.topbar p{font-size:10px;color:#aac4e0}
+.setup-banner{display:none!important}
+.setup-banner h3{font-size:14px;font-weight:700;margin-bottom:8px}
+.setup-banner input{width:100%;padding:8px 10px;border:1px solid #ffc107;border-radius:7px;font-size:13px;margin-top:6px;background:#fff;color:#222}
+.setup-banner .bsave{margin-top:8px;padding:9px;border-radius:8px;background:#ffc107;color:#7d5a00;font-weight:700;font-size:13px;border:none;width:100%;cursor:pointer}
+.setup-done{background:#d4edda;border-color:#28a745;color:#155724;border-radius:10px;padding:12px;margin:10px;font-size:13px}
+.wrap{padding:10px;max-width:700px;margin:0 auto}
+.card{background:#fff;border-radius:10px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.card h2{font-size:13px;font-weight:700;color:#1a3a5c;margin-bottom:10px}
+.field{margin-bottom:8px}
+.field label{font-size:11px;color:#666;display:block;margin-bottom:3px;font-weight:600}
+.field input,.field select,.field textarea{width:100%;padding:9px 10px;border:1px solid #ddd;border-radius:8px;font-size:14px;background:#fafafa;color:#222;font-family:sans-serif}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.prog-card{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.prog-row{display:flex;justify-content:space-between;font-size:13px;color:#555;margin-bottom:6px}
+.prog-pct{font-weight:700;color:#1a3a5c}
+.pbar{height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,#1a3a5c,#2980b9);border-radius:4px;transition:width .3s}
+.section{background:#fff;border-radius:10px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.1);overflow:hidden}
+.shead{padding:11px 14px;display:flex;align-items:center;gap:8px;cursor:pointer}
+.stitle{font-size:13px;font-weight:700;flex:1;color:#fff}
+.scnt{font-size:12px;color:rgba(255,255,255,.8);white-space:nowrap}
+.chevron{color:rgba(255,255,255,.8);font-size:13px;transition:transform .2s}
+.hidden .chevron{transform:rotate(-90deg)}
+.hidden .items{display:none}
+.row{display:flex;gap:10px;padding:12px 14px;border-top:1px solid #f0f0f0;align-items:flex-start}
+.num{font-size:11px;color:#bbb;min-width:20px;padding-top:3px;text-align:right;flex-shrink:0}
+.cb{width:24px;height:24px;border:2px solid #ccc;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;transition:all .15s}
+.cb.on{background:#1a3a5c;border-color:#1a3a5c}
+.cb.on::after{content:'✓';color:#fff;font-size:14px;font-weight:900}
+.body{flex:1;min-width:0}
+.lbl{font-size:13px;line-height:1.5;color:#222}
+.lbl-en{font-size:11px;color:#999;font-style:italic;margin-top:1px}
+.crit{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;background:#fde8e8;color:#b91c1c;font-weight:700;margin-left:4px;vertical-align:middle}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;align-items:center}
+.photo-label{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:7px 12px;border-radius:8px;border:1.5px dashed #1a3a5c;background:#f0f4fa;color:#1a3a5c;cursor:pointer;font-weight:600}
+.photo-label.done{background:#e8f5e9;border-color:#2e7d32;border-style:solid;color:#2e7d32}
+.photo-label.uploading{background:#fff8e1;border-color:#f9a825;border-style:solid;color:#f57f17}
+.photo-label svg{width:15px;height:15px;flex-shrink:0}
+input[type=file]{display:none}
+.thumbs{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.thumb{position:relative;width:70px;height:70px;border-radius:7px;overflow:hidden;border:1.5px solid #ddd;flex-shrink:0}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.thumb .upload-ok{position:absolute;bottom:0;left:0;right:0;background:rgba(46,125,50,.85);color:#fff;font-size:9px;text-align:center;padding:2px;font-weight:700}
+.thumb .upload-fail{position:absolute;bottom:0;left:0;right:0;background:rgba(183,28,28,.85);color:#fff;font-size:9px;text-align:center;padding:2px;font-weight:700}
+.remark{width:100%;padding:7px 9px;border:1px solid #e0e0e0;border-radius:7px;font-size:12px;font-family:sans-serif;background:#fafafa;resize:none;margin-top:6px;color:#222}
+.sv-card{background:#fff;border-radius:10px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.sv-card h2{font-size:13px;font-weight:700;color:#1a3a5c;margin-bottom:10px}
+.warn{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px;font-size:12px;color:#7d5a00;margin-bottom:10px;line-height:1.5}
+.sv-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.sv-row span{font-size:13px;color:#333;line-height:1.5}
+.sign{border:1.5px dashed #ccc;border-radius:8px;padding:14px;text-align:center;font-size:12px;color:#aaa;margin-bottom:12px}
+.sign.ok{border-color:#1a3a5c;background:#e8f0fb;color:#1a3a5c;font-weight:700}
+.status-bar{border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:8px;text-align:center;font-weight:600;display:none}
+.status-bar.sending{background:#e3f2fd;color:#1565c0;display:block}
+.status-bar.success{background:#e8f5e9;color:#2e7d32;display:block}
+.status-bar.error{background:#ffebee;color:#c62828;display:block}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.btn{padding:13px 8px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;font-family:sans-serif}
+.btn-sheets{background:#0f9d58;color:#fff}
+.btn-line{background:#06C755;color:#fff}
+.btn-dark{background:#1a3a5c;color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.guide-card{background:#fff;border-radius:10px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.guide-card h2{font-size:13px;font-weight:700;color:#1a3a5c;margin-bottom:10px}
+.code-box{background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:8px;font-family:monospace;font-size:10px;line-height:1.6;overflow-x:auto;white-space:pre-wrap;margin:8px 0}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">MSC</div>
+  <div>
+    <h1>WI Checklist – Fix CO2 System</h1>
+    <p>Marine Servitec Co.,Ltd  |  WI–SE–02 Rev.01</p>
+  </div>
+</div>
+
+<div id="safari-warn" style="display:none;background:#fff3cd;border-bottom:2px solid #ffc107;padding:10px 14px;font-size:12px;color:#7d5a00;line-height:1.6">
+  <strong>⚠️ กรุณาเปิดด้วย Chrome</strong><br>
+  Safari มีปัญหาส่งข้อมูลไม่เข้า Google Sheets<br>
+  <a href="googlechrome://poompunbooneiam.github.io/CO2-Check-list/" style="display:inline-block;margin-top:6px;background:#1a73e8;color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:12px">🔵 เปิดใน Chrome</a>
+  <span style="margin-left:8px;font-size:11px;color:#9a6700">ถ้าไม่มี Chrome ดาวน์โหลดจาก App Store</span>
+</div>
+<script>
+(function(){
+  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if(isSafari && isIOS){
+    document.getElementById('safari-warn').style.display='block';
+  }
+})();
+</script>
+
+<div id="setup-banner" class="setup-banner" style="display:none">
+  <h3>⚙️ ตั้งค่าครั้งแรก — Google Script URL</h3>
+  <p>วาง URL ของ Google Apps Script เพื่อบันทึกข้อมูลและรูปภาพลง Google Sheets / Drive</p>
+  <input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/AKfycbzhTHuA0B4QuNz98mCSnS4Ejk_su2k7EJxo_Yhnys2mVfChXdqpBSP0Sb4SMr0jhrukLQ/exec">
+  <button class="bsave" onclick="saveURL()">💾 บันทึก URL</button>
+</div>
+<div id="setup-done" class="setup-done" style="display:none">
+  ✅ เชื่อม Google Sheets แล้ว — <span style="text-decoration:underline;cursor:pointer;color:#0f5132" onclick="resetURL()">เปลี่ยน URL</span>
+</div>
+
+<div class="wrap">
+
+<div class="card">
+  <h2>📋 ข้อมูลงาน</h2>
+  <div class="grid2">
+    <div class="field" style="grid-column:1/-1"><label>ชื่อเรือ / Vessel Name</label><input type="text" id="vessel" placeholder="ชื่อเรือ"></div>
+    <div class="field"><label>Job No.</label><input type="text" id="jobno" placeholder="JOB-2025-001"></div>
+    <div class="field"><label>วันที่ตรวจ</label><input type="date" id="idate"></div>
+    <div class="field"><label>เวลาเริ่มงาน</label><input type="time" id="itime"></div>
+    <div class="field"><label>Supervisor / Foreman</label><input type="text" id="supervisor" placeholder="ชื่อหัวหน้าทีม"></div>
+  </div>
+</div>
+
+<div class="prog-card">
+  <div class="prog-row"><span id="ptxt">0 / 14 รายการ</span><span class="prog-pct" id="ppct">0%</span></div>
+  <div class="pbar"><div class="pfill" id="pfill" style="width:0%"></div></div>
+</div>
+
+<div id="secs"></div>
+
+<div class="sv-card">
+  <h2>👨‍✈️ การอนุมัติหัวหน้างาน</h2>
+  <div class="warn">⚠️ ต้องได้รับการอนุมัติก่อนลงจากเรือทุกครั้ง</div>
+  <div class="field"><label>ชื่อหัวหน้างาน</label><input type="text" id="svname" placeholder="ชื่อ-นามสกุล"></div>
+  <div class="field"><label>ผลการตรวจสอบโดยรวม</label>
+    <select id="svresult">
+      <option value="">-- เลือกผล --</option>
+      <option>ผ่านทั้งหมด</option>
+      <option>มีรายการที่ต้องแก้ไข</option>
+      <option>ไม่ผ่าน</option>
+    </select>
+  </div>
+  <div class="field"><label>หมายเหตุจากหัวหน้างาน</label>
+    <textarea class="remark" id="svremark" rows="2" placeholder="กรอกหมายเหตุ (ถ้ามี)"></textarea>
+  </div>
+  <div class="sv-row">
+    <div class="cb" id="svcb" onclick="toggleSV(this)" style="flex-shrink:0;margin-top:2px"></div>
+    <span>หัวหน้างานตรวจสอบและอนุมัติผล Checklist รวมถึงภาพถ่ายครบถ้วนแล้ว</span>
+  </div>
+  <div class="sign" id="signbox">✍️ รอการอนุมัติ</div>
+  <div id="status-bar" class="status-bar"></div>
+  <div class="btns">
+    <button class="btn btn-sheets" id="btn-sheets" onclick="saveToSheets()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      บันทึก Sheets + รูป
+    </button>
+    <button class="btn btn-line" onclick="sendLine()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.07 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+      ส่งไลน์
+    </button>
+  </div>
+  <button class="btn btn-dark" style="width:100%" onclick="window.print()">🖨️ พิมพ์รายงาน</button>
+</div>
+
+<div class="guide-card">
+  <h2>📖 Apps Script ที่ต้องอัปเดต (รองรับรูปภาพ)</h2>
+  <p style="font-size:12px;color:#555;margin-bottom:6px">ถ้าตั้งค่า Script ไปแล้ว ให้นำโค้ดนี้ไปแทนของเดิม แล้ว Deploy ใหม่อีกครั้ง</p>
+  <div class="code-box">function doPost(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getActiveSheet();
   var data = JSON.parse(e.postData.contents);
@@ -71,4 +247,361 @@ function doGet(e) {
   return ContentService
     .createTextOutput(JSON.stringify({status:'ready'}))
     .setMimeType(ContentService.MimeType.JSON);
+}</div>
+  <p style="font-size:11px;color:#c62828;margin-top:4px">⚠️ หลังวางโค้ดใหม่ต้อง Deploy → New deployment อีกครั้ง แล้วอัปเดต URL ใหม่ในช่อง ⚙️ ตั้งค่า</p>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var ITEMS=[
+  {id:'a1',sec:'accept',th:'รับงานจากลูกค้า พร้อมข้อมูลงานที่จะขึ้นทำ',en:'Receive job from customer.',crit:false},
+  {id:'i1',sec:'inspect',th:'ระบายอากาศในห้อง CO2 ก่อนเข้า โดยเปิดประตูระบายอากาศทิ้งไว้',en:'Ventilate the CO2 room before entering.',crit:true},
+  {id:'i2',sec:'inspect',th:'แจ้งกัปตันหรือคนเรือว่าจะมีการตรวจระบบ',en:'Inform the captain or crew.',crit:true},
+  {id:'i3',sec:'inspect',th:'ตัดระบบทำงานอัตโนมัติ',en:'Disable automatic operation.',crit:true},
+  {id:'i4',sec:'inspect',th:'ตรวจสอบน้ำหนักสาร CO2 ในแต่ละถัง (ถ้าลดลงต่ำกว่า 10% ให้เติม)',en:'Check CO2 weight. Refill if below 10%.',crit:true},
+  {id:'i5',sec:'inspect',th:'ตรวจสอบวันที่ทำ Hydro test ครั้งล่าสุด',en:'Check the last Hydro test date.',crit:false},
+  {id:'i6',sec:'inspect',th:'ตรวจสอบสภาพภายนอกของถัง',en:'Inspect the external condition of the tank.',crit:false},
+  {id:'i7',sec:'inspect',th:'ตรวจสอบการทำงานของวาล์วทั้งหมด',en:'Check the operation of all valves.',crit:true},
+  {id:'i8',sec:'inspect',th:'ตรวจสอบระบบท่อทางโดยใช้ลม',en:'Inspect the piping system using air.',crit:false},
+  {id:'i9',sec:'inspect',th:'ตรวจสอบการทำงานของ Delay และสัญญาณเตือน',en:'Check the delay and alarm signals.',crit:true},
+  {id:'i10',sec:'inspect',th:'ต่อระบบกลับให้พร้อมใช้งาน',en:'Reconnect the system for readiness.',crit:true},
+  {id:'d1',sec:'doc',th:'ทำรายงานตรวจสอบและให้ทางเรือเซ็นต์รับทราบ',en:'Prepare report and have the ship sign.',crit:true},
+  {id:'d2',sec:'doc',th:'จดข้อมูลรายละเอียดถังเพื่อออกใบรับรอง',en:'Record tank details for certificate.',crit:false},
+  {id:'d3',sec:'doc',th:'ติดสติกเกอร์วัน เดือน ปี ที่ตรวจสอบ',en:'Affix a sticker with the inspection date.',crit:false},
+];
+var SECS=[
+  {id:'accept',title:'ขั้นตอนการรับงาน',color:'#1a3a5c'},
+  {id:'inspect',title:'ขั้นตอนการตรวจสอบ',color:'#7b1f1f'},
+  {id:'doc',title:'ขั้นตอนเอกสารและการบันทึก',color:'#14532d'},
+];
+var S={},photos={},remarks={},svOK=false;
+ITEMS.forEach(function(it){S[it.id]=false;photos[it.id]=[];remarks[it.id]='';});
+
+var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbzhTHuA0B4QuNz98mCSnS4Ejk_su2k7EJxo_Yhnys2mVfChXdqpBSP0Sb4SMr0jhrukLQ/exec';
+var SURL=DEFAULT_URL;
+function initUI(){}
+function saveURL(){
+  var u=document.getElementById('script-url-input').value.trim();
+  if(!u||!u.startsWith('https://')){toast('⚠️ URL ไม่ถูกต้อง');return;}
+  SURL=u;localStorage.setItem('co2_surl',u);
+  document.getElementById('setup-banner').style.display='none';
+  document.getElementById('setup-done').style.display='block';
+  toast('✅ บันทึก URL แล้ว');
 }
+function resetURL(){
+  SURL='';localStorage.removeItem('co2_surl');
+  document.getElementById('setup-done').style.display='none';
+  document.getElementById('setup-banner').style.display='block';
+}
+
+function render(){
+  var c=document.getElementById('secs');c.innerHTML='';
+  SECS.forEach(function(sec){
+    var its=ITEMS.filter(function(it){return it.sec===sec.id;});
+    var el=document.createElement('div');el.className='section';el.id='sec-'+sec.id;
+    var rows=its.map(function(it,i){
+      return '<div class="row" id="row-'+it.id+'">'
+        +'<span class="num">'+(i+1)+'</span>'
+        +'<div class="cb'+(S[it.id]?' on':'')+'" id="cb-'+it.id+'" onclick="tog(\''+it.id+'\')"></div>'
+        +'<div class="body">'
+        +'<div class="lbl">'+it.th+(it.crit?'<span class="crit">⚠ สำคัญ</span>':'')+'</div>'
+        +'<div class="lbl-en">'+it.en+'</div>'
+        +'<div class="actions">'
+        +'<label class="photo-label" id="plbl-'+it.id+'" for="fi-'+it.id+'">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>'
+        +'<span id="plbltxt-'+it.id+'">📸 ถ่ายรูป / เลือกรูป</span>'
+        +'</label>'
+        +'<input type="file" id="fi-'+it.id+'" accept="image/*" capture="environment" multiple onchange="addPhoto(\''+it.id+'\',this)">'
+        +'</div>'
+        +'<div class="thumbs" id="th-'+it.id+'"></div>'
+        +'<textarea class="remark" id="rem-'+it.id+'" rows="1" placeholder="หมายเหตุ (ถ้ามี)" oninput="remarks[\''+it.id+'\']=this.value"></textarea>'
+        +'</div></div>';
+    }).join('');
+    el.innerHTML='<div class="shead" style="background:'+sec.color+'" onclick="toggleSec(\''+sec.id+'\')">'
+      +'<span class="stitle">'+sec.title+'</span>'
+      +'<span class="scnt" id="cnt-'+sec.id+'">0/'+its.length+'</span>'
+      +'<span class="chevron">▾</span></div>'
+      +'<div class="items" id="items-'+sec.id+'">'+rows+'</div>';
+    c.appendChild(el);updCnt(sec.id);
+  });
+  updProg();
+}
+
+function tog(id){
+  S[id]=!S[id];
+  var cb=document.getElementById('cb-'+id);
+  S[id]?cb.classList.add('on'):cb.classList.remove('on');
+  var sec=SECS.find(function(s){return ITEMS.find(function(it){return it.id===id&&it.sec===s.id;});});
+  if(sec)updCnt(sec.id);
+  updProg();
+}
+
+function compressImage(file, callback){
+  var maxSize = 800;
+  var quality = 0.6;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.createElement('canvas');
+      var w = img.width, h = img.height;
+      if(w > maxSize || h > maxSize){
+        if(w > h){ h = Math.round(h*maxSize/w); w = maxSize; }
+        else { w = Math.round(w*maxSize/h); h = maxSize; }
+      }
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function addPhoto(id,input){
+  Array.from(input.files).forEach(function(f){
+    compressImage(f, function(compressed){
+      photos[id].push({b64:compressed,status:'pending'});
+      refreshPhoto(id);
+      var kb = Math.round(compressed.length*0.75/1024);
+      toast('📸 บันทึกรูป ('+kb+'KB)');
+    });
+  });
+  input.value='';
+}
+
+function refreshPhoto(id){
+  var container=document.getElementById('th-'+id);
+  container.innerHTML=photos[id].map(function(p,pi){
+    var badge='';
+    if(p.status==='ok') badge='<div class="upload-ok">✓ อัปโหลดแล้ว</div>';
+    else if(p.status==='fail') badge='<div class="upload-fail">✗ ล้มเหลว</div>';
+    return '<div class="thumb"><img src="'+p.b64+'">'
+      +'<button class="del" onclick="delPhoto(\''+id+'\','+pi+')">×</button>'
+      +badge+'</div>';
+  }).join('');
+  var lbl=document.getElementById('plbl-'+id);
+  var txt=document.getElementById('plbltxt-'+id);
+  var n=photos[id].length;
+  var ok=photos[id].filter(function(p){return p.status==='ok';}).length;
+  if(n===0){
+    lbl.className='photo-label';
+    txt.textContent='📸 ถ่ายรูป / เลือกรูป';
+  } else if(ok===n){
+    lbl.className='photo-label done';
+    txt.textContent='✅ '+n+' รูป (อัปโหลดแล้ว)';
+  } else {
+    lbl.className='photo-label done';
+    txt.textContent='📷 '+n+' รูป';
+  }
+}
+
+function delPhoto(id,idx){photos[id].splice(idx,1);refreshPhoto(id);}
+function toggleSec(id){document.getElementById('sec-'+id).classList.toggle('hidden');}
+function updCnt(sid){
+  var its=ITEMS.filter(function(it){return it.sec===sid;});
+  var done=its.filter(function(it){return S[it.id];}).length;
+  document.getElementById('cnt-'+sid).textContent=done+'/'+its.length;
+}
+function updProg(){
+  var done=Object.values(S).filter(Boolean).length;
+  var pct=Math.round(done/ITEMS.length*100);
+  document.getElementById('pfill').style.width=pct+'%';
+  document.getElementById('ptxt').textContent=done+' / '+ITEMS.length+' รายการ';
+  document.getElementById('ppct').textContent=pct+'%';
+}
+function toggleSV(el){
+  svOK=!svOK;
+  svOK?el.classList.add('on'):el.classList.remove('on');
+  var box=document.getElementById('signbox');
+  var sv=document.getElementById('svname').value||'Supervisor';
+  if(svOK){box.className='sign ok';box.innerHTML='✅ อนุมัติโดย: '+sv+'<br><small style="font-weight:400">'+new Date().toLocaleString('th-TH')+'</small>';}
+  else{box.className='sign';box.innerHTML='✍️ รอการอนุมัติ';}
+}
+
+function setStatus(type,msg){
+  var b=document.getElementById('status-bar');
+  b.className='status-bar '+type;b.textContent=msg;
+}
+
+function buildPayload(){
+  var done=Object.values(S).filter(Boolean).length;
+  var p={
+    vessel:document.getElementById('vessel').value||'-',
+    jobno:document.getElementById('jobno').value||'-',
+    supervisor:document.getElementById('supervisor').value||'-',
+    idate:document.getElementById('idate').value||'-',
+    itime:document.getElementById('itime').value||'-',
+    svname:document.getElementById('svname').value||'-',
+    svresult:document.getElementById('svresult').value||'-',
+    svremark:document.getElementById('svremark').value||'-',
+    summary:done+'/'+ITEMS.length,
+    photos:{}
+  };
+  ITEMS.forEach(function(it){
+    p[it.id]=S[it.id]?'✅ ผ่าน':'⬜ ยังไม่ดำเนินการ';
+    if(remarks[it.id]) p[it.id]+=' | '+remarks[it.id];
+    if(photos[it.id].length>0){
+      p.photos[it.id]=photos[it.id].map(function(ph){return ph.b64;});
+    }
+  });
+  return p;
+}
+
+function saveToSheets(){
+  if(!svOK){toast('⚠️ ต้องให้หัวหน้างานอนุมัติก่อน');return;}
+  var totalPic=Object.values(photos).reduce(function(a,b){return a+b.length;},0);
+  setStatus('sending','⏳ กำลังบันทึกข้อมูล...');
+  document.getElementById('btn-sheets').disabled=true;
+
+  var payload=buildPayload();
+  // แยกรูปออก ส่ง text ก่อน
+  var textPayload = JSON.parse(JSON.stringify(payload));
+  textPayload.photos = {};
+
+  // Step 1: ส่ง text data ก่อน
+  sendData(textPayload, function(ok){
+    if(!ok){
+      setStatus('error','❌ ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่');
+      document.getElementById('btn-sheets').disabled=false;
+      return;
+    }
+    setStatus('success','✅ บันทึกข้อมูลสำเร็จ!');
+    document.getElementById('btn-sheets').disabled=false;
+    toast('✅ บันทึกสำเร็จ!');
+
+    // Step 2: ส่งรูปทีละรูปถ้ามี
+    if(totalPic > 0){
+      setStatus('sending','⏳ กำลังอัปโหลดรูป '+totalPic+' รูป...');
+      sendPhotosOneByOne(payload, totalPic);
+    }
+  });
+}
+
+function sendData(payload, callback){
+  var jsonStr = JSON.stringify(payload);
+  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  if(isSafari){
+    // Safari: form submit + timer
+    var iframe = document.getElementById('submit-frame');
+    if(!iframe){
+      iframe = document.createElement('iframe');
+      iframe.id = 'submit-frame';
+      iframe.name = 'submit-frame';
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+    }
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = SURL;
+    form.target = 'submit-frame';
+    form.style.display = 'none';
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'data';
+    input.value = jsonStr;
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(function(){
+      try{document.body.removeChild(form);}catch(e){}
+      callback(true);
+    }, 2000);
+  } else {
+    // Chrome: fetch
+    fetch(SURL,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:jsonStr
+    }).then(function(){
+      callback(true);
+    }).catch(function(){
+      callback(false);
+    });
+  }
+}
+
+function sendPhotosOneByOne(payload, total){
+  var allPhotos = [];
+  Object.keys(payload.photos).forEach(function(key){
+    if(!payload.photos[key] || !payload.photos[key].length) return;
+    payload.photos[key].forEach(function(b64, idx){
+      allPhotos.push({key:key, b64:b64, idx:idx});
+    });
+  });
+
+  var sent = 0;
+  function sendNext(){
+    if(sent >= allPhotos.length){
+      setStatus('success','✅ บันทึกและอัปโหลดรูปครบ '+total+' รูป!');
+      ITEMS.forEach(function(it){
+        photos[it.id].forEach(function(p){p.status='ok';});
+        refreshPhoto(it.id);
+      });
+      return;
+    }
+    var p = allPhotos[sent];
+    var photoPayload = {
+      vessel: payload.vessel,
+      jobno: payload.jobno,
+      idate: payload.idate,
+      photoOnly: true,
+      photoKey: p.key,
+      photoIdx: p.idx,
+      photos: {}
+    };
+    photoPayload.photos[p.key] = [p.b64];
+
+    setStatus('sending','⏳ อัปโหลดรูป '+(sent+1)+'/'+total+'...');
+    sendData(photoPayload, function(){
+      sent++;
+      setTimeout(sendNext, 500);
+    });
+  }
+  sendNext();
+}
+
+function sendLine(){
+  if(!svOK){toast('⚠️ ต้องให้หัวหน้างานอนุมัติก่อน');return;}
+  var p=buildPayload();
+  var done=Object.values(S).filter(Boolean).length;
+  var totalPic=Object.values(photos).reduce(function(a,b){return a+b.length;},0);
+  var pending=ITEMS.filter(function(it){return it.crit&&!S[it.id];}).map(function(it){return '• '+it.th;});
+  var msg='📋 รายงาน WI Checklist – Fix CO2 System\n'
+    +'🏢 Marine Servitec Co.,Ltd | WI–SE–02\n'
+    +'──────────────────────\n'
+    +'🚢 เรือ: '+p.vessel+'\n'
+    +'📌 Job No.: '+p.jobno+'\n'
+    +'📅 วันที่: '+p.idate+'  เวลา: '+p.itime+'\n'
+    +'👤 Supervisor: '+p.supervisor+'\n'
+    +'──────────────────────\n'
+    +'✅ ผ่านการตรวจ: '+done+'/'+ITEMS.length+' รายการ\n'
+    +'📸 ภาพถ่าย: '+totalPic+' รูป (เก็บใน Google Drive)\n';
+  if(pending.length) msg+='⚠️ รายการสำคัญค้าง:\n'+pending.join('\n')+'\n';
+  msg+='──────────────────────\n'
+    +'👨‍✈️ อนุมัติโดย: '+p.svname+'\n'
+    +'📊 ผล: '+p.svresult+'\n'
+    +(p.svremark&&p.svremark!=='-'?'💬 หมายเหตุ: '+p.svremark+'\n':'')
+    +'──────────────────────\n'
+    +'📂 ดูรูปภาพทั้งหมดใน Google Drive';
+  window.open('https://line.me/R/msg/text/?'+encodeURIComponent(msg),'_blank');
+}
+
+function toast(msg){
+  var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2500);
+}
+
+document.getElementById('idate').value=new Date().toISOString().split('T')[0];
+var now=new Date();
+document.getElementById('itime').value=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+initUI();
+render();
+</script>
+</body>
+</html>
