@@ -91,6 +91,22 @@ input[type=file]{display:none}
   </div>
 </div>
 
+<div id="safari-warn" style="display:none;background:#fff3cd;border-bottom:2px solid #ffc107;padding:10px 14px;font-size:12px;color:#7d5a00;line-height:1.6">
+  <strong>⚠️ กรุณาเปิดด้วย Chrome</strong><br>
+  Safari มีปัญหาส่งข้อมูลไม่เข้า Google Sheets<br>
+  <a href="googlechrome://poompunbooneiam.github.io/CO2-Check-list/" style="display:inline-block;margin-top:6px;background:#1a73e8;color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-weight:600;font-size:12px">🔵 เปิดใน Chrome</a>
+  <span style="margin-left:8px;font-size:11px;color:#9a6700">ถ้าไม่มี Chrome ดาวน์โหลดจาก App Store</span>
+</div>
+<script>
+(function(){
+  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if(isSafari && isIOS){
+    document.getElementById('safari-warn').style.display='block';
+  }
+})();
+</script>
+
 <div id="setup-banner" class="setup-banner" style="display:none">
   <h3>⚙️ ตั้งค่าครั้งแรก — Google Script URL</h3>
   <p>วาง URL ของ Google Apps Script เพื่อบันทึกข้อมูลและรูปภาพลง Google Sheets / Drive</p>
@@ -437,91 +453,117 @@ function buildPayload(){
 
 function saveToSheets(){
   if(!svOK){toast('⚠️ ต้องให้หัวหน้างานอนุมัติก่อน');return;}
-  if(!SURL){
-    document.getElementById('setup-banner').style.display='block';
-    window.scrollTo({top:0,behavior:'smooth'});
-    toast('⚠️ กรุณาตั้งค่า Script URL ก่อน');return;
-  }
   var totalPic=Object.values(photos).reduce(function(a,b){return a+b.length;},0);
-  setStatus('sending','⏳ กำลังบันทึกข้อมูล'+(totalPic>0?' และอัปโหลด '+totalPic+' รูป':'')+' ...');
+  setStatus('sending','⏳ กำลังบันทึกข้อมูล...');
   document.getElementById('btn-sheets').disabled=true;
-  var payload=buildPayload();
-  var jsonStr=JSON.stringify(payload);
 
-  // วิธีที่ 1: fetch (Android Chrome)
-  // วิธีที่ 2: form submit (iPhone Safari fallback)
-  var isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  var payload=buildPayload();
+  // แยกรูปออก ส่ง text ก่อน
+  var textPayload = JSON.parse(JSON.stringify(payload));
+  textPayload.photos = {};
+
+  // Step 1: ส่ง text data ก่อน
+  sendData(textPayload, function(ok){
+    if(!ok){
+      setStatus('error','❌ ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่');
+      document.getElementById('btn-sheets').disabled=false;
+      return;
+    }
+    setStatus('success','✅ บันทึกข้อมูลสำเร็จ!');
+    document.getElementById('btn-sheets').disabled=false;
+    toast('✅ บันทึกสำเร็จ!');
+
+    // Step 2: ส่งรูปทีละรูปถ้ามี
+    if(totalPic > 0){
+      setStatus('sending','⏳ กำลังอัปโหลดรูป '+totalPic+' รูป...');
+      sendPhotosOneByOne(payload, totalPic);
+    }
+  });
+}
+
+function sendData(payload, callback){
+  var jsonStr = JSON.stringify(payload);
+  var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
   if(isSafari){
-    // Safari: ใช้ hidden form submit ผ่าน iframe
-    var iframe=document.getElementById('submit-frame');
+    // Safari: form submit + timer
+    var iframe = document.getElementById('submit-frame');
     if(!iframe){
-      iframe=document.createElement('iframe');
-      iframe.id='submit-frame';
-      iframe.name='submit-frame';
-      iframe.style.display='none';
+      iframe = document.createElement('iframe');
+      iframe.id = 'submit-frame';
+      iframe.name = 'submit-frame';
+      iframe.style.display = 'none';
       document.body.appendChild(iframe);
     }
-    var form=document.createElement('form');
-    form.method='POST';
-    form.action=SURL;
-    form.target='submit-frame';
-    form.style.display='none';
-    var input=document.createElement('input');
-    input.type='hidden';
-    input.name='data';
-    input.value=jsonStr;
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = SURL;
+    form.target = 'submit-frame';
+    form.style.display = 'none';
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'data';
+    input.value = jsonStr;
     form.appendChild(input);
     document.body.appendChild(form);
-
-    // Safari: ไม่รอ onload เพราะ CORS บล็อก → ใช้ timeout แทน
     form.submit();
     setTimeout(function(){
-      setStatus('success','✅ บันทึกสำเร็จ! ข้อมูลอยู่ใน Google Sheets แล้ว');
-      document.getElementById('btn-sheets').disabled=false;
-      ITEMS.forEach(function(it){
-        photos[it.id].forEach(function(p){p.status='ok';});
-        refreshPhoto(it.id);
-      });
-      toast('✅ บันทึกสำเร็จ!');
       try{document.body.removeChild(form);}catch(e){}
-    },3000);
-
+      callback(true);
+    }, 2000);
   } else {
-    // Chrome/Android: fetch ปกติ
+    // Chrome: fetch
     fetch(SURL,{
       method:'POST',
       mode:'no-cors',
       headers:{'Content-Type':'application/json'},
       body:jsonStr
     }).then(function(){
-      setStatus('success','✅ บันทึกสำเร็จ! รูปอยู่ใน Google Drive โฟลเดอร์: '+payload.vessel+'_'+payload.jobno);
-      document.getElementById('btn-sheets').disabled=false;
+      callback(true);
+    }).catch(function(){
+      callback(false);
+    });
+  }
+}
+
+function sendPhotosOneByOne(payload, total){
+  var allPhotos = [];
+  Object.keys(payload.photos).forEach(function(key){
+    if(!payload.photos[key] || !payload.photos[key].length) return;
+    payload.photos[key].forEach(function(b64, idx){
+      allPhotos.push({key:key, b64:b64, idx:idx});
+    });
+  });
+
+  var sent = 0;
+  function sendNext(){
+    if(sent >= allPhotos.length){
+      setStatus('success','✅ บันทึกและอัปโหลดรูปครบ '+total+' รูป!');
       ITEMS.forEach(function(it){
         photos[it.id].forEach(function(p){p.status='ok';});
         refreshPhoto(it.id);
       });
-      toast('✅ บันทึกและอัปโหลดรูปสำเร็จ!');
-    }).catch(function(err){
-      // Fallback: form submit
-      setStatus('sending','⏳ กำลังลองวิธีสำรอง...');
-      var form=document.createElement('form');
-      form.method='POST';
-      form.action=SURL;
-      form.target='_blank';
-      form.style.display='none';
-      var inp=document.createElement('input');
-      inp.type='hidden'; inp.name='data'; inp.value=jsonStr;
-      form.appendChild(inp);
-      document.body.appendChild(form);
-      form.submit();
-      setTimeout(function(){
-        setStatus('success','✅ บันทึกเรียบร้อย กรุณาตรวจสอบใน Sheets');
-        document.getElementById('btn-sheets').disabled=false;
-        document.body.removeChild(form);
-      },3000);
+      return;
+    }
+    var p = allPhotos[sent];
+    var photoPayload = {
+      vessel: payload.vessel,
+      jobno: payload.jobno,
+      idate: payload.idate,
+      photoOnly: true,
+      photoKey: p.key,
+      photoIdx: p.idx,
+      photos: {}
+    };
+    photoPayload.photos[p.key] = [p.b64];
+
+    setStatus('sending','⏳ อัปโหลดรูป '+(sent+1)+'/'+total+'...');
+    sendData(photoPayload, function(){
+      sent++;
+      setTimeout(sendNext, 500);
     });
   }
+  sendNext();
 }
 
 function sendLine(){
