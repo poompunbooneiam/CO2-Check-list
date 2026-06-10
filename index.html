@@ -91,7 +91,27 @@ input[type=file]{display:none}
   </div>
 </div>
 
-<!-- setup removed -->
+<div id="setup-banner" class="setup-banner" style="display:none">
+  <h3>⚙️ ตั้งค่าครั้งแรก — Google Script URL</h3>
+  <p>วาง URL ของ Google Apps Script เพื่อบันทึกข้อมูลและรูปภาพลง Google Sheets / Drive</p>
+  <input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+  <button class="bsave" onclick="saveURL()">💾 บันทึก URL</button>
+</div>
+<div id="setup-done" class="setup-done" style="display:none">
+  ✅ เชื่อม Google Sheets แล้ว — <span style="text-decoration:underline;cursor:pointer;color:#0f5132" onclick="resetURL()">เปลี่ยน URL</span>
+</div>
+
+<div class="wrap">
+
+<div class="card">
+  <h2>📋 ข้อมูลงาน</h2>
+  <div class="grid2">
+    <div class="field" style="grid-column:1/-1"><label>ชื่อเรือ / Vessel Name</label><input type="text" id="vessel" placeholder="ชื่อเรือ"></div>
+    <div class="field"><label>Job No.</label><input type="text" id="jobno" placeholder="JOB-2025-001"></div>
+    <div class="field"><label>วันที่ตรวจ</label><input type="date" id="idate"></div>
+    <div class="field"><label>เวลาเริ่มงาน</label><input type="time" id="itime"></div>
+    <div class="field"><label>Supervisor / Foreman</label><input type="text" id="supervisor" placeholder="ชื่อหัวหน้าทีม"></div>
+  </div>
 </div>
 
 <div class="prog-card">
@@ -243,11 +263,30 @@ var SECS=[
 var S={},photos={},remarks={},svOK=false;
 ITEMS.forEach(function(it){S[it.id]=false;photos[it.id]=[];remarks[it.id]='';});
 
-// URL ถูกล็อกไว้แล้ว ไม่ต้องตั้งค่าเอง
-var SURL = 'https://script.google.com/macros/s/AKfycbwO9NkglhHb6AH1NtqUwuoohUTZHVdyXu5JV2ln6kmjkRdwN60iIutK3E-__Pz3RzORRA/exec';
-function initUI(){ /* URL ฝังไว้แล้ว */ }
-function saveURL(){ /* ไม่ใช้แล้ว */ }
-function resetURL(){ /* ไม่ใช้แล้ว */ }
+var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwO9NkglhHb6AH1NtqUwuoohUTZHVdyXu5JV2ln6kmjkRdwN60iIutK3E-__Pz3RzORRA/exec';
+var SURL=localStorage.getItem('co2_surl')||DEFAULT_URL;
+function initUI(){
+  if(SURL){
+    document.getElementById('setup-done').style.display='block';
+  } else {
+    SURL = DEFAULT_URL;
+    localStorage.setItem('co2_surl', DEFAULT_URL);
+    document.getElementById('setup-done').style.display='block';
+  }
+}
+function saveURL(){
+  var u=document.getElementById('script-url-input').value.trim();
+  if(!u||!u.startsWith('https://')){toast('⚠️ URL ไม่ถูกต้อง');return;}
+  SURL=u;localStorage.setItem('co2_surl',u);
+  document.getElementById('setup-banner').style.display='none';
+  document.getElementById('setup-done').style.display='block';
+  toast('✅ บันทึก URL แล้ว');
+}
+function resetURL(){
+  SURL='';localStorage.removeItem('co2_surl');
+  document.getElementById('setup-done').style.display='none';
+  document.getElementById('setup-banner').style.display='block';
+}
 
 function render(){
   var c=document.getElementById('secs');c.innerHTML='';
