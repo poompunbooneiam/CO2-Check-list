@@ -110,7 +110,7 @@ input[type=file]{display:none}
 <div id="setup-banner" class="setup-banner" style="display:none">
   <h3>⚙️ ตั้งค่าครั้งแรก — Google Script URL</h3>
   <p>วาง URL ของ Google Apps Script เพื่อบันทึกข้อมูลและรูปภาพลง Google Sheets / Drive</p>
-  <input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/AKfycbzhTHuA0B4QuNz98mCSnS4Ejk_su2k7EJxo_Yhnys2mVfChXdqpBSP0Sb4SMr0jhrukLQ/exec">
+  <input type="url" id="script-url-input" placeholder="https://script.google.com/macros/s/AKfycbwYMqHneDEW92dPg_QGT-hvL9x-_vuvI09Gj4IH6od-3uCYT12p4T2XF2qrmYRxCySobA/exec">
   <button class="bsave" onclick="saveURL()">💾 บันทึก URL</button>
 </div>
 <div id="setup-done" class="setup-done" style="display:none">
@@ -279,7 +279,7 @@ var SECS=[
 var S={},photos={},remarks={},svOK=false;
 ITEMS.forEach(function(it){S[it.id]=false;photos[it.id]=[];remarks[it.id]='';});
 
-var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbzhTHuA0B4QuNz98mCSnS4Ejk_su2k7EJxo_Yhnys2mVfChXdqpBSP0Sb4SMr0jhrukLQ/exec';
+var DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwYMqHneDEW92dPg_QGT-hvL9x-_vuvI09Gj4IH6od-3uCYT12p4T2XF2qrmYRxCySobA/exec';
 var SURL=DEFAULT_URL;
 function initUI(){}
 function saveURL(){
