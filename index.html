@@ -48,6 +48,7 @@ body{font-family:sans-serif;background:#eef2f7;color:#222;font-size:15px}
 .photo-label{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:7px 12px;border-radius:8px;border:1.5px dashed #1a3a5c;background:#f0f4fa;color:#1a3a5c;cursor:pointer;font-weight:600}
 .photo-label.done{background:#e8f5e9;border-color:#2e7d32;border-style:solid;color:#2e7d32}
 .photo-label.uploading{background:#fff8e1;border-color:#f9a825;border-style:solid;color:#f57f17}
+.cam-btn{background:#fff8e1!important;border-color:#f57f17!important;color:#f57f17!important;font-size:14px!important;padding:7px 10px!important}
 .photo-label svg{width:15px;height:15px;flex-shrink:0}
 input[type=file]{display:none}
 .thumbs{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
@@ -313,7 +314,7 @@ function render(){
         +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>'
         +'<span id="plbltxt-'+it.id+'">📸 ถ่ายรูป / เลือกรูป</span>'
         +'</label>'
-        +'<input type="file" id="fi-'+it.id+'" accept="image/*" capture="environment" multiple onchange="addPhoto(\''+it.id+'\',this)">'
+        +'<input type="file" id="fi-'+it.id+'" accept="image/*" multiple onchange="addPhoto(\''+it.id+'\',this)">'+'<input type="file" id="fi-cam-'+it.id+'" accept="image/*" capture="environment" multiple onchange="addPhoto(\''+it.id+'\',this)">'+'<label class="photo-label cam-btn" for="fi-cam-'+it.id+'" style="padding:6px 9px;margin-left:2px">📷</label>'
         +'</div>'
         +'<div class="thumbs" id="th-'+it.id+'"></div>'
         +'<textarea class="remark" id="rem-'+it.id+'" rows="1" placeholder="หมายเหตุ (ถ้ามี)" oninput="remarks[\''+it.id+'\']=this.value"></textarea>'
@@ -389,10 +390,10 @@ function refreshPhoto(id){
   var ok=photos[id].filter(function(p){return p.status==='ok';}).length;
   if(n===0){
     lbl.className='photo-label';
-    txt.textContent='📸 ถ่ายรูป / เลือกรูป';
+    txt.textContent='📸 ถ่ายรูป / Gallery';
   } else if(ok===n){
     lbl.className='photo-label done';
-    txt.textContent='✅ '+n+' รูป (อัปโหลดแล้ว)';
+    txt.textContent='✅ '+n+' รูป';
   } else {
     lbl.className='photo-label done';
     txt.textContent='📷 '+n+' รูป';
